@@ -71,16 +71,16 @@ const statusDiv = document.getElementById('status');
 const submitBtn = document.getElementById('submitBtn');
 
 // Input elements
-const callIdInput = document.getElementById('callId');
 const nameInput = document.getElementById('name');
+const phoneInput = document.getElementById('phone');
 const emailInput = document.getElementById('email');
 const countrySelect = document.getElementById('country');
 const businessTypeInput = document.getElementById('business_type');
 const websitesInput = document.getElementById('websites');
 
 // Error message elements
-const callIdError = document.getElementById('callIdError');
 const nameError = document.getElementById('nameError');
+const phoneError = document.getElementById('phoneError');
 const emailError = document.getElementById('emailError');
 const countryError = document.getElementById('countryError');
 const businessTypeError = document.getElementById('businessTypeError');
@@ -106,8 +106,8 @@ function populateCountries() {
 function getQueryParams() {
     const params = new URLSearchParams(window.location.search);
     return {
-        callId: params.get('callId') || params.get('call_id'),
         name: params.get('name'),
+        phone: params.get('phone'),
         email: params.get('email'),
         businessType: params.get('businessType') || params.get('business_type'),
         country: params.get('country'),
@@ -119,8 +119,8 @@ function getQueryParams() {
 function autoFillForm() {
     const queryParams = getQueryParams();
 
-    if (queryParams.callId) callIdInput.value = queryParams.callId;
     if (queryParams.name) nameInput.value = queryParams.name;
+    if (queryParams.phone) phoneInput.value = queryParams.phone;
     if (queryParams.email) emailInput.value = queryParams.email;
     if (queryParams.businessType) businessTypeInput.value = queryParams.businessType;
     if (queryParams.country) countrySelect.value = queryParams.country;
@@ -128,16 +128,6 @@ function autoFillForm() {
 }
 
 // Validation functions
-function validateCallId(callId) {
-    if (!callId || callId.trim().length === 0) {
-        return { valid: false, message: 'Call ID is required' };
-    }
-    if (callId.trim().length < 3) {
-        return { valid: false, message: 'Call ID must be at least 3 characters' };
-    }
-    return { valid: true, message: '' };
-}
-
 function validateName(name) {
     if (!name || name.trim().length === 0) {
         return { valid: false, message: 'Name is required' };
@@ -145,6 +135,26 @@ function validateName(name) {
     if (name.trim().length < 2) {
         return { valid: false, message: 'Name must be at least 2 characters' };
     }
+    return { valid: true, message: '' };
+}
+
+function validatePhone(phone) {
+    if (!phone || phone.trim().length === 0) {
+        return { valid: false, message: 'Phone number is required' };
+    }
+
+    // Remove all non-digit characters for validation
+    const digitsOnly = phone.replace(/\D/g, '');
+
+    // Check if it has at least 10 digits (international format may vary)
+    if (digitsOnly.length < 10) {
+        return { valid: false, message: 'Phone number must be at least 10 digits' };
+    }
+
+    if (digitsOnly.length > 15) {
+        return { valid: false, message: 'Phone number is too long' };
+    }
+
     return { valid: true, message: '' };
 }
 
@@ -236,15 +246,6 @@ function hideStatus() {
 function validateForm() {
     let isValid = true;
 
-    // Validate call ID
-    const callIdValidation = validateCallId(callIdInput.value);
-    if (!callIdValidation.valid) {
-        showError(callIdInput, callIdError, callIdValidation.message);
-        isValid = false;
-    } else {
-        clearError(callIdInput, callIdError);
-    }
-
     // Validate name
     const nameValidation = validateName(nameInput.value);
     if (!nameValidation.valid) {
@@ -252,6 +253,15 @@ function validateForm() {
         isValid = false;
     } else {
         clearError(nameInput, nameError);
+    }
+
+    // Validate phone
+    const phoneValidation = validatePhone(phoneInput.value);
+    if (!phoneValidation.valid) {
+        showError(phoneInput, phoneError, phoneValidation.message);
+        isValid = false;
+    } else {
+        clearError(phoneInput, phoneError);
     }
 
     // Validate email
@@ -307,8 +317,8 @@ async function handleSubmit(e) {
 
     // Prepare form data
     const formData = {
-        callId: callIdInput.value.trim(),
         name: nameInput.value.trim(),
+        phone: phoneInput.value.trim(),
         email: emailInput.value.trim(),
         country: countrySelect.value,
         countryName: getCountryName(countrySelect.value),
@@ -329,21 +339,21 @@ async function handleSubmit(e) {
 }
 
 // Add real-time validation on blur
-callIdInput.addEventListener('blur', () => {
-    const validation = validateCallId(callIdInput.value);
-    if (!validation.valid) {
-        showError(callIdInput, callIdError, validation.message);
-    } else {
-        clearError(callIdInput, callIdError);
-    }
-});
-
 nameInput.addEventListener('blur', () => {
     const validation = validateName(nameInput.value);
     if (!validation.valid) {
         showError(nameInput, nameError, validation.message);
     } else {
         clearError(nameInput, nameError);
+    }
+});
+
+phoneInput.addEventListener('blur', () => {
+    const validation = validatePhone(phoneInput.value);
+    if (!validation.valid) {
+        showError(phoneInput, phoneError, validation.message);
+    } else {
+        clearError(phoneInput, phoneError);
     }
 });
 

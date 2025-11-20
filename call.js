@@ -6,8 +6,10 @@ let callData = null;
 
 const elements = {
     userInfo: document.getElementById('userInfo'),
+    callIdSection: document.getElementById('callIdSection'),
     displayCallId: document.getElementById('displayCallId'),
     displayName: document.getElementById('displayName'),
+    displayPhone: document.getElementById('displayPhone'),
     displayEmail: document.getElementById('displayEmail'),
     displayBusinessType: document.getElementById('displayBusinessType'),
     displayCountry: document.getElementById('displayCountry'),
@@ -95,6 +97,7 @@ function getQueryParams() {
     return {
         callId: params.get('callId') || params.get('call_id'),
         name: params.get('name'),
+        phone: params.get('phone'),
         email: params.get('email'),
         businessType: params.get('businessType') || params.get('business_type'),
         country: params.get('country'),
@@ -104,11 +107,17 @@ function getQueryParams() {
 
 // Function to load call data from localStorage or query params
 function loadCallData() {
+    const queryParams = getQueryParams();
+
     // First, try to get data from localStorage (form submission)
     const storedData = localStorage.getItem('vapiCallData');
     if (storedData) {
         try {
             callData = JSON.parse(storedData);
+            // If there's a callId in query params, add it to the data
+            if (queryParams.callId) {
+                callData.callId = queryParams.callId;
+            }
             return callData;
         } catch (e) {
             console.error('Error parsing stored call data:', e);
@@ -116,11 +125,11 @@ function loadCallData() {
     }
 
     // If no localStorage data, try query params
-    const queryParams = getQueryParams();
     if (queryParams.callId || queryParams.name || queryParams.email) {
         callData = {
             callId: queryParams.callId || '',
             name: queryParams.name || '',
+            phone: queryParams.phone || '',
             email: queryParams.email || '',
             business_type: queryParams.businessType || '',
             country: queryParams.country || '',
@@ -144,8 +153,15 @@ function displayUserInfo() {
     }
 
     // Display the information
-    elements.displayCallId.textContent = data.callId || '-';
+    if (data.callId) {
+        elements.displayCallId.textContent = data.callId;
+        elements.callIdSection.style.display = 'flex';
+    } else {
+        elements.callIdSection.style.display = 'none';
+    }
+
     elements.displayName.textContent = data.name || '-';
+    elements.displayPhone.textContent = data.phone || '-';
     elements.displayEmail.textContent = data.email || '-';
     elements.displayBusinessType.textContent = data.business_type || '-';
     elements.displayCountry.textContent = data.countryName || data.country || '-';
@@ -237,12 +253,13 @@ async function startCall() {
             variableValues: {
                 customer: {
                     name: callData.name,
+                    phone: callData.phone,
                     email: callData.email,
                     business_type: callData.business_type,
                     country: callData.country,
                     websites: callData.websites
                 },
-                callId: callData.callId,
+                callId: callData.callId || '',
                 currentTime: new Date().toISOString()
             }
         };
