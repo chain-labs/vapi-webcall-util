@@ -44,14 +44,14 @@
             font-size: 14px;
         }
 
-        .user-info {
+        .data-section {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 24px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
-        .user-info h2 {
+        .data-section h2 {
             font-size: 18px;
             color: #333;
             margin-bottom: 16px;
@@ -59,14 +59,18 @@
             padding-bottom: 8px;
         }
 
+        .field-container {
+            margin-bottom: 16px;
+        }
+
+        .field-container:last-child {
+            margin-bottom: 0;
+        }
+
         .info-item {
             display: flex;
             margin-bottom: 12px;
             line-height: 1.5;
-        }
-
-        .info-item:last-child {
-            margin-bottom: 0;
         }
 
         .info-label {
@@ -81,6 +85,41 @@
             flex: 1;
             font-size: 14px;
             word-break: break-word;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .required {
+            color: #f44336;
         }
 
         .button-group {
@@ -187,37 +226,95 @@
 <body>
     <div class="container">
         <h1>VAPI Web Call</h1>
-        <p class="subtitle">Your call details</p>
+        <p class="subtitle">Enter your call details</p>
 
-        <div id="userInfo" class="user-info hidden">
+        <div id="dataSection" class="data-section">
             <h2>Call Information</h2>
-            <div class="info-item" id="callIdSection">
-                <span class="info-label">Call ID:</span>
-                <span class="info-value" id="displayCallId">-</span>
+
+            <!-- Call ID field -->
+            <div class="field-container" id="callIdContainer">
+                <div class="info-item" id="callIdDisplay">
+                    <span class="info-label">Call ID:</span>
+                    <span class="info-value" id="displayCallId">-</span>
+                </div>
+                <div class="form-group hidden" id="callIdInput">
+                    <label for="callId">Call ID</label>
+                    <input type="text" id="callId" placeholder="Enter call ID">
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Name:</span>
-                <span class="info-value" id="displayName">-</span>
+
+            <!-- Name field -->
+            <div class="field-container">
+                <div class="info-item" id="nameDisplay">
+                    <span class="info-label">Name:</span>
+                    <span class="info-value" id="displayName">-</span>
+                </div>
+                <div class="form-group hidden" id="nameInput">
+                    <label for="name">Name <span class="required">*</span></label>
+                    <input type="text" id="name" placeholder="Enter your name" required>
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Phone:</span>
-                <span class="info-value" id="displayPhone">-</span>
+
+            <!-- Phone field -->
+            <div class="field-container">
+                <div class="info-item" id="phoneDisplay">
+                    <span class="info-label">Phone:</span>
+                    <span class="info-value" id="displayPhone">-</span>
+                </div>
+                <div class="form-group hidden" id="phoneInput">
+                    <label for="phone">Phone <span class="required">*</span></label>
+                    <input type="tel" id="phone" placeholder="+1 (555) 123-4567" required>
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Email:</span>
-                <span class="info-value" id="displayEmail">-</span>
+
+            <!-- Email field -->
+            <div class="field-container">
+                <div class="info-item" id="emailDisplay">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value" id="displayEmail">-</span>
+                </div>
+                <div class="form-group hidden" id="emailInput">
+                    <label for="email">Email <span class="required">*</span></label>
+                    <input type="email" id="email" placeholder="your.email@example.com" required>
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Business Type:</span>
-                <span class="info-value" id="displayBusinessType">-</span>
+
+            <!-- Business Type field -->
+            <div class="field-container">
+                <div class="info-item" id="businessTypeDisplay">
+                    <span class="info-label">Business Type:</span>
+                    <span class="info-value" id="displayBusinessType">-</span>
+                </div>
+                <div class="form-group hidden" id="businessTypeInput">
+                    <label for="businessType">Business Type <span class="required">*</span></label>
+                    <input type="text" id="businessType" placeholder="e.g., Technology, Retail" required>
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Country:</span>
-                <span class="info-value" id="displayCountry">-</span>
+
+            <!-- Country field -->
+            <div class="field-container">
+                <div class="info-item" id="countryDisplay">
+                    <span class="info-label">Country:</span>
+                    <span class="info-value" id="displayCountry">-</span>
+                </div>
+                <div class="form-group hidden" id="countryInput">
+                    <label for="country">Country <span class="required">*</span></label>
+                    <select id="country" required>
+                        <option value="">Select a country</option>
+                    </select>
+                </div>
             </div>
-            <div class="info-item">
-                <span class="info-label">Website:</span>
-                <span class="info-value" id="displayWebsites">-</span>
+
+            <!-- Websites field -->
+            <div class="field-container">
+                <div class="info-item" id="websitesDisplay">
+                    <span class="info-label">Website:</span>
+                    <span class="info-value" id="displayWebsites">-</span>
+                </div>
+                <div class="form-group hidden" id="websitesInput">
+                    <label for="websites">Website <span class="required">*</span></label>
+                    <input type="url" id="websites" placeholder="https://www.example.com" required>
+                </div>
             </div>
         </div>
 

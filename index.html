@@ -169,6 +169,21 @@
             to { transform: rotate(360deg); }
         }
 
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 30px 20px;
@@ -268,8 +283,12 @@
                 <div class="error-message" id="websitesError"></div>
             </div>
 
-            <button type="submit" id="submitBtn">Start VAPI Call</button>
+            <button type="submit" id="submitBtn">Submit Form</button>
         </form>
+
+        <div class="back-link">
+            <a href="call.html">Go to Web Call Page →</a>
+        </div>
     </div>
 
     <script type="module" src="/form.js"></script>

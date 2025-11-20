@@ -2,11 +2,21 @@ import Vapi from '@vapi-ai/web';
 
 let vapiClient = null;
 let isCallActive = false;
-let callData = null;
+let callData = {};
 
+// Get all DOM elements
 const elements = {
-    userInfo: document.getElementById('userInfo'),
-    callIdSection: document.getElementById('callIdSection'),
+    // Display elements
+    callIdContainer: document.getElementById('callIdContainer'),
+    callIdDisplay: document.getElementById('callIdDisplay'),
+    nameDisplay: document.getElementById('nameDisplay'),
+    phoneDisplay: document.getElementById('phoneDisplay'),
+    emailDisplay: document.getElementById('emailDisplay'),
+    businessTypeDisplay: document.getElementById('businessTypeDisplay'),
+    countryDisplay: document.getElementById('countryDisplay'),
+    websitesDisplay: document.getElementById('websitesDisplay'),
+
+    // Display values
     displayCallId: document.getElementById('displayCallId'),
     displayName: document.getElementById('displayName'),
     displayPhone: document.getElementById('displayPhone'),
@@ -14,81 +24,112 @@ const elements = {
     displayBusinessType: document.getElementById('displayBusinessType'),
     displayCountry: document.getElementById('displayCountry'),
     displayWebsites: document.getElementById('displayWebsites'),
+
+    // Input containers
+    callIdInput: document.getElementById('callIdInput'),
+    nameInput: document.getElementById('nameInput'),
+    phoneInput: document.getElementById('phoneInput'),
+    emailInput: document.getElementById('emailInput'),
+    businessTypeInput: document.getElementById('businessTypeInput'),
+    countryInput: document.getElementById('countryInput'),
+    websitesInput: document.getElementById('websitesInput'),
+
+    // Input fields
+    callId: document.getElementById('callId'),
+    name: document.getElementById('name'),
+    phone: document.getElementById('phone'),
+    email: document.getElementById('email'),
+    businessType: document.getElementById('businessType'),
+    country: document.getElementById('country'),
+    websites: document.getElementById('websites'),
+
+    // Buttons and status
     startCallBtn: document.getElementById('startCallBtn'),
     endCallBtn: document.getElementById('endCallBtn'),
     status: document.getElementById('status')
 };
 
 // Country list for mapping codes to names
-const countryMap = {
-    'US': 'United States',
-    'GB': 'United Kingdom',
-    'CA': 'Canada',
-    'AU': 'Australia',
-    'IN': 'India',
-    'DE': 'Germany',
-    'FR': 'France',
-    'IT': 'Italy',
-    'ES': 'Spain',
-    'NL': 'Netherlands',
-    'SE': 'Sweden',
-    'NO': 'Norway',
-    'DK': 'Denmark',
-    'FI': 'Finland',
-    'PL': 'Poland',
-    'BE': 'Belgium',
-    'CH': 'Switzerland',
-    'AT': 'Austria',
-    'IE': 'Ireland',
-    'PT': 'Portugal',
-    'GR': 'Greece',
-    'CZ': 'Czech Republic',
-    'HU': 'Hungary',
-    'RO': 'Romania',
-    'BG': 'Bulgaria',
-    'HR': 'Croatia',
-    'SK': 'Slovakia',
-    'SI': 'Slovenia',
-    'LT': 'Lithuania',
-    'LV': 'Latvia',
-    'EE': 'Estonia',
-    'JP': 'Japan',
-    'CN': 'China',
-    'KR': 'South Korea',
-    'SG': 'Singapore',
-    'MY': 'Malaysia',
-    'TH': 'Thailand',
-    'VN': 'Vietnam',
-    'PH': 'Philippines',
-    'ID': 'Indonesia',
-    'NZ': 'New Zealand',
-    'ZA': 'South Africa',
-    'BR': 'Brazil',
-    'MX': 'Mexico',
-    'AR': 'Argentina',
-    'CL': 'Chile',
-    'CO': 'Colombia',
-    'PE': 'Peru',
-    'AE': 'United Arab Emirates',
-    'SA': 'Saudi Arabia',
-    'IL': 'Israel',
-    'TR': 'Turkey',
-    'RU': 'Russia',
-    'UA': 'Ukraine',
-    'EG': 'Egypt',
-    'NG': 'Nigeria',
-    'KE': 'Kenya',
-    'GH': 'Ghana',
-    'PK': 'Pakistan',
-    'BD': 'Bangladesh',
-    'LK': 'Sri Lanka',
-    'HK': 'Hong Kong',
-    'TW': 'Taiwan',
-};
+const countries = [
+    { code: 'US', name: 'United States' },
+    { code: 'GB', name: 'United Kingdom' },
+    { code: 'CA', name: 'Canada' },
+    { code: 'AU', name: 'Australia' },
+    { code: 'IN', name: 'India' },
+    { code: 'DE', name: 'Germany' },
+    { code: 'FR', name: 'France' },
+    { code: 'IT', name: 'Italy' },
+    { code: 'ES', name: 'Spain' },
+    { code: 'NL', name: 'Netherlands' },
+    { code: 'SE', name: 'Sweden' },
+    { code: 'NO', name: 'Norway' },
+    { code: 'DK', name: 'Denmark' },
+    { code: 'FI', name: 'Finland' },
+    { code: 'PL', name: 'Poland' },
+    { code: 'BE', name: 'Belgium' },
+    { code: 'CH', name: 'Switzerland' },
+    { code: 'AT', name: 'Austria' },
+    { code: 'IE', name: 'Ireland' },
+    { code: 'PT', name: 'Portugal' },
+    { code: 'GR', name: 'Greece' },
+    { code: 'CZ', name: 'Czech Republic' },
+    { code: 'HU', name: 'Hungary' },
+    { code: 'RO', name: 'Romania' },
+    { code: 'BG', name: 'Bulgaria' },
+    { code: 'HR', name: 'Croatia' },
+    { code: 'SK', name: 'Slovakia' },
+    { code: 'SI', name: 'Slovenia' },
+    { code: 'LT', name: 'Lithuania' },
+    { code: 'LV', name: 'Latvia' },
+    { code: 'EE', name: 'Estonia' },
+    { code: 'JP', name: 'Japan' },
+    { code: 'CN', name: 'China' },
+    { code: 'KR', name: 'South Korea' },
+    { code: 'SG', name: 'Singapore' },
+    { code: 'MY', name: 'Malaysia' },
+    { code: 'TH', name: 'Thailand' },
+    { code: 'VN', name: 'Vietnam' },
+    { code: 'PH', name: 'Philippines' },
+    { code: 'ID', name: 'Indonesia' },
+    { code: 'NZ', name: 'New Zealand' },
+    { code: 'ZA', name: 'South Africa' },
+    { code: 'BR', name: 'Brazil' },
+    { code: 'MX', name: 'Mexico' },
+    { code: 'AR', name: 'Argentina' },
+    { code: 'CL', name: 'Chile' },
+    { code: 'CO', name: 'Colombia' },
+    { code: 'PE', name: 'Peru' },
+    { code: 'AE', name: 'United Arab Emirates' },
+    { code: 'SA', name: 'Saudi Arabia' },
+    { code: 'IL', name: 'Israel' },
+    { code: 'TR', name: 'Turkey' },
+    { code: 'RU', name: 'Russia' },
+    { code: 'UA', name: 'Ukraine' },
+    { code: 'EG', name: 'Egypt' },
+    { code: 'NG', name: 'Nigeria' },
+    { code: 'KE', name: 'Kenya' },
+    { code: 'GH', name: 'Ghana' },
+    { code: 'PK', name: 'Pakistan' },
+    { code: 'BD', name: 'Bangladesh' },
+    { code: 'LK', name: 'Sri Lanka' },
+    { code: 'HK', name: 'Hong Kong' },
+    { code: 'TW', name: 'Taiwan' },
+];
+
+// Populate country dropdown
+function populateCountries() {
+    countries.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country.code;
+        option.textContent = country.name;
+        elements.country.appendChild(option);
+    });
+}
 
 // Function to get country name from code
 function getCountryName(code) {
-    return countryMap[code] || code;
+    const country = countries.find(c => c.code === code);
+    return country ? country.name : code;
 }
 
 // Function to parse query parameters from URL
@@ -105,72 +146,147 @@ function getQueryParams() {
     };
 }
 
-// Function to load call data from localStorage or query params
-function loadCallData() {
+// Function to load initial data from localStorage or query params
+function loadInitialData() {
     const queryParams = getQueryParams();
+    let data = {};
 
-    // First, try to get data from localStorage (form submission)
+    // Try to get data from localStorage first
     const storedData = localStorage.getItem('vapiCallData');
     if (storedData) {
         try {
-            callData = JSON.parse(storedData);
-            // If there's a callId in query params, add it to the data
-            if (queryParams.callId) {
-                callData.callId = queryParams.callId;
-            }
-            return callData;
+            data = JSON.parse(storedData);
         } catch (e) {
             console.error('Error parsing stored call data:', e);
         }
     }
 
-    // If no localStorage data, try query params
-    if (queryParams.callId || queryParams.name || queryParams.email) {
-        callData = {
-            callId: queryParams.callId || '',
-            name: queryParams.name || '',
-            phone: queryParams.phone || '',
-            email: queryParams.email || '',
-            business_type: queryParams.businessType || '',
-            country: queryParams.country || '',
-            countryName: getCountryName(queryParams.country),
-            websites: queryParams.websites || ''
-        };
-        return callData;
-    }
+    // Override with query params if provided
+    if (queryParams.callId) data.callId = queryParams.callId;
+    if (queryParams.name) data.name = queryParams.name;
+    if (queryParams.phone) data.phone = queryParams.phone;
+    if (queryParams.email) data.email = queryParams.email;
+    if (queryParams.businessType) data.business_type = queryParams.businessType;
+    if (queryParams.country) data.country = queryParams.country;
+    if (queryParams.websites) data.websites = queryParams.websites;
 
-    return null;
+    return data;
 }
 
-// Function to display user information
-function displayUserInfo() {
-    const data = loadCallData();
+// Function to setup field (show as input or display)
+function setupField(fieldName, value, isOptional = false) {
+    const hasValue = value && value.trim() !== '';
 
-    if (!data) {
-        showStatus('No call data found. Please fill out the form first.', 'error');
-        elements.startCallBtn.disabled = true;
-        return false;
-    }
+    const displayContainer = elements[`${fieldName}Display`];
+    const inputContainer = elements[`${fieldName}Input`];
+    const displayElement = elements[`display${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)}`];
+    const inputElement = elements[fieldName];
 
-    // Display the information
-    if (data.callId) {
-        elements.displayCallId.textContent = data.callId;
-        elements.callIdSection.style.display = 'flex';
+    if (hasValue) {
+        // Show display mode
+        if (displayContainer) displayContainer.classList.remove('hidden');
+        if (inputContainer) inputContainer.classList.add('hidden');
+
+        // Set display value
+        if (displayElement) {
+            if (fieldName === 'country') {
+                displayElement.textContent = getCountryName(value);
+            } else {
+                displayElement.textContent = value;
+            }
+        }
+
+        // Store in callData
+        if (fieldName === 'businessType') {
+            callData.business_type = value;
+        } else {
+            callData[fieldName] = value;
+        }
     } else {
-        elements.callIdSection.style.display = 'none';
+        // Show input mode
+        if (!isOptional || fieldName === 'callId') {
+            if (displayContainer) displayContainer.classList.add('hidden');
+            if (inputContainer) inputContainer.classList.remove('hidden');
+        } else {
+            // For optional field without value, hide entire container
+            if (elements[`${fieldName}Container`]) {
+                elements[`${fieldName}Container`].style.display = 'none';
+            }
+        }
+
+        // Set input value if any
+        if (inputElement && value) {
+            inputElement.value = value;
+        }
+    }
+}
+
+// Initialize the page
+function initializePage() {
+    populateCountries();
+
+    const initialData = loadInitialData();
+
+    // Setup each field
+    setupField('callId', initialData.callId, true); // Call ID is optional
+    setupField('name', initialData.name, false);
+    setupField('phone', initialData.phone, false);
+    setupField('email', initialData.email, false);
+    setupField('businessType', initialData.business_type, false);
+    setupField('country', initialData.country, false);
+    setupField('websites', initialData.websites, false);
+
+    // Set country name for display
+    if (initialData.country) {
+        callData.countryName = getCountryName(initialData.country);
     }
 
-    elements.displayName.textContent = data.name || '-';
-    elements.displayPhone.textContent = data.phone || '-';
-    elements.displayEmail.textContent = data.email || '-';
-    elements.displayBusinessType.textContent = data.business_type || '-';
-    elements.displayCountry.textContent = data.countryName || data.country || '-';
-    elements.displayWebsites.textContent = data.websites || '-';
+    showStatus('Ready to start call', 'info');
+}
 
-    // Show the user info section
-    elements.userInfo.classList.remove('hidden');
+// Function to get current call data (from callData or inputs)
+function getCurrentCallData() {
+    const data = { ...callData };
 
-    return true;
+    // Get values from inputs if they're visible
+    if (!elements.callIdInput.classList.contains('hidden')) {
+        data.callId = elements.callId.value.trim();
+    }
+    if (!elements.nameInput.classList.contains('hidden')) {
+        data.name = elements.name.value.trim();
+    }
+    if (!elements.phoneInput.classList.contains('hidden')) {
+        data.phone = elements.phone.value.trim();
+    }
+    if (!elements.emailInput.classList.contains('hidden')) {
+        data.email = elements.email.value.trim();
+    }
+    if (!elements.businessTypeInput.classList.contains('hidden')) {
+        data.business_type = elements.businessType.value.trim();
+    }
+    if (!elements.countryInput.classList.contains('hidden')) {
+        data.country = elements.country.value;
+        data.countryName = getCountryName(data.country);
+    }
+    if (!elements.websitesInput.classList.contains('hidden')) {
+        data.websites = elements.websites.value.trim();
+    }
+
+    return data;
+}
+
+// Validate required fields
+function validateCallData(data) {
+    const errors = [];
+
+    if (!data.name) errors.push('Name is required');
+    if (!data.phone) errors.push('Phone is required');
+    if (!data.email) errors.push('Email is required');
+    if (!data.business_type) errors.push('Business type is required');
+    if (!data.country) errors.push('Country is required');
+    if (!data.websites) errors.push('Website is required');
+
+    return errors;
 }
 
 function showStatus(message, type = 'info') {
@@ -182,6 +298,25 @@ function updateUIState(calling) {
     isCallActive = calling;
     elements.startCallBtn.disabled = calling;
     elements.endCallBtn.disabled = !calling;
+
+    // Disable all inputs during call
+    if (calling) {
+        elements.callId.disabled = true;
+        elements.name.disabled = true;
+        elements.phone.disabled = true;
+        elements.email.disabled = true;
+        elements.businessType.disabled = true;
+        elements.country.disabled = true;
+        elements.websites.disabled = true;
+    } else {
+        elements.callId.disabled = false;
+        elements.name.disabled = false;
+        elements.phone.disabled = false;
+        elements.email.disabled = false;
+        elements.businessType.disabled = false;
+        elements.country.disabled = false;
+        elements.websites.disabled = false;
+    }
 }
 
 function initializeVapiClient(apiKey) {
@@ -225,8 +360,12 @@ function initializeVapiClient(apiKey) {
 }
 
 async function startCall() {
-    if (!callData) {
-        showStatus('No call data available. Please fill out the form.', 'error');
+    const data = getCurrentCallData();
+
+    // Validate required fields
+    const errors = validateCallData(data);
+    if (errors.length > 0) {
+        showStatus(`Please fill in: ${errors.join(', ')}`, 'error');
         return;
     }
 
@@ -252,14 +391,14 @@ async function startCall() {
         const assistantOverrides = {
             variableValues: {
                 customer: {
-                    name: callData.name,
-                    phone: callData.phone,
-                    email: callData.email,
-                    business_type: callData.business_type,
-                    country: callData.country,
-                    websites: callData.websites
+                    name: data.name,
+                    phone: data.phone,
+                    email: data.email,
+                    business_type: data.business_type,
+                    country: data.country,
+                    websites: data.websites
                 },
-                callId: callData.callId || '',
+                callId: data.callId || '',
                 currentTime: new Date().toISOString()
             }
         };
@@ -293,8 +432,6 @@ elements.startCallBtn.addEventListener('click', startCall);
 elements.endCallBtn.addEventListener('click', endCall);
 
 // Initialize on page load
-if (displayUserInfo()) {
-    showStatus('Ready to start call', 'info');
-}
+initializePage();
 
 console.log('VAPI Web Call page loaded');
