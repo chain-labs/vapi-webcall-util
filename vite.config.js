@@ -10,4 +10,6 @@ export default defineConfig({
       },
     },
   },
+  // Automatically load environment variables prefixed with VITE_
+  envPrefix: 'VITE_',
 });

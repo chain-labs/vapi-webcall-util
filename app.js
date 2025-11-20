@@ -17,6 +17,43 @@ const elements = {
     status: document.getElementById('status')
 };
 
+// Function to parse query parameters from URL
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        callId: params.get('callId') || params.get('call_id'),
+        name: params.get('name'),
+        email: params.get('email'),
+        businessType: params.get('businessType') || params.get('business_type'),
+        country: params.get('country'),
+        websites: params.get('websites')
+    };
+}
+
+// Function to auto-fill form from query parameters and environment variables
+function autoFillForm() {
+    const queryParams = getQueryParams();
+
+    // Auto-fill from query parameters
+    if (queryParams.callId) elements.callId.value = queryParams.callId;
+    if (queryParams.name) elements.name.value = queryParams.name;
+    if (queryParams.email) elements.email.value = queryParams.email;
+    if (queryParams.businessType) elements.businessType.value = queryParams.businessType;
+    if (queryParams.country) elements.country.value = queryParams.country;
+    if (queryParams.websites) elements.websites.value = queryParams.websites;
+
+    // Auto-fill from environment variables
+    if (import.meta.env.VITE_VAPI_PUBLIC_KEY) {
+        elements.apiKey.value = import.meta.env.VITE_VAPI_PUBLIC_KEY;
+    }
+    if (import.meta.env.VITE_VAPI_ASSISTANT_ID) {
+        elements.assistantId.value = import.meta.env.VITE_VAPI_ASSISTANT_ID;
+    }
+}
+
+// Initialize form on page load
+autoFillForm();
+
 function showStatus(message, type = 'info') {
     elements.status.textContent = message;
     elements.status.className = `status ${type}`;
