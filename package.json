@@ -1,0 +1,21 @@
+{
+  "name": "vapi-call",
+  "version": "1.0.0",
+  "description": "A simple web application to make VAPI calls directly from your browser with custom metadata.",
+  "main": "app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@vapi-ai/web": "^2.5.0"
+  },
+  "devDependencies": {
+    "vite": "^6.4.1"
+  }
+}
