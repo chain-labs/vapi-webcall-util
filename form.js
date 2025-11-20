@@ -86,6 +86,12 @@ const countryError = document.getElementById('countryError');
 const businessTypeError = document.getElementById('businessTypeError');
 const websitesError = document.getElementById('websitesError');
 
+// Function to get country name from code
+function getCountryName(code) {
+    const country = countries.find(c => c.code === code);
+    return country ? country.name : code;
+}
+
 // Populate country dropdown
 function populateCountries() {
     countries.forEach(country => {
@@ -94,6 +100,31 @@ function populateCountries() {
         option.textContent = country.name;
         countrySelect.appendChild(option);
     });
+}
+
+// Function to parse query parameters from URL
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        name: params.get('name'),
+        phone: params.get('phone'),
+        email: params.get('email'),
+        businessType: params.get('businessType') || params.get('business_type'),
+        country: params.get('country'),
+        websites: params.get('websites')
+    };
+}
+
+// Function to auto-fill form from query parameters
+function autoFillForm() {
+    const queryParams = getQueryParams();
+
+    if (queryParams.name) nameInput.value = queryParams.name;
+    if (queryParams.phone) phoneInput.value = queryParams.phone;
+    if (queryParams.email) emailInput.value = queryParams.email;
+    if (queryParams.businessType) businessTypeInput.value = queryParams.businessType;
+    if (queryParams.country) countrySelect.value = queryParams.country;
+    if (queryParams.websites) websitesInput.value = queryParams.websites;
 }
 
 // Validation functions
@@ -272,31 +303,6 @@ function validateForm() {
     return isValid;
 }
 
-// Submit form data to webhook
-async function submitForm(formData) {
-    const webhookUrl = 'https://primary-production-23ae.up.railway.app/webhook/form-submission';
-
-    try {
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return { success: true, data: result };
-    } catch (error) {
-        console.error('Form submission error:', error);
-        return { success: false, error: error.message };
-    }
-}
-
 // Handle form submission
 async function handleSubmit(e) {
     e.preventDefault();
@@ -315,6 +321,7 @@ async function handleSubmit(e) {
         phone: phoneInput.value.trim(),
         email: emailInput.value.trim(),
         country: countrySelect.value,
+        countryName: getCountryName(countrySelect.value),
         business_type: businessTypeInput.value.trim(),
         websites: websitesInput.value.trim(),
     };
@@ -323,18 +330,41 @@ async function handleSubmit(e) {
     submitBtn.disabled = true;
     showStatus('Submitting form...', 'loading');
 
-    // Submit form
-    const result = await submitForm(formData);
+    // Send POST request to webhook
+    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://primary-production-23ae.up.railway.app/webhook/form-submission';
 
-    if (result.success) {
-        showStatus('Form submitted successfully!', 'success');
-        form.reset();
-    } else {
-        showStatus(`Submission failed: ${result.error}`, 'error');
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Form submission successful:', result);
+
+        // Store data in localStorage for the call page
+        localStorage.setItem('vapiCallData', JSON.stringify(formData));
+
+        // Show success message
+        showStatus('Form submitted successfully! Redirecting...', 'success');
+
+        // Redirect to call page after a short delay
+        setTimeout(() => {
+            window.location.href = 'call.html';
+        }, 1000);
+
+    } catch (error) {
+        console.error('Form submission error:', error);
+        showStatus(`Submission failed: ${error.message}. Please try again.`, 'error');
+        submitBtn.disabled = false;
     }
-
-    // Re-enable form
-    submitBtn.disabled = false;
 }
 
 // Add real-time validation on blur
@@ -394,4 +424,5 @@ websitesInput.addEventListener('blur', () => {
 
 // Initialize
 populateCountries();
+autoFillForm();
 form.addEventListener('submit', handleSubmit);
