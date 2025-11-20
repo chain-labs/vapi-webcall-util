@@ -326,16 +326,45 @@ async function handleSubmit(e) {
         websites: websitesInput.value.trim(),
     };
 
-    // Store data in localStorage for the call page
-    localStorage.setItem('vapiCallData', JSON.stringify(formData));
+    // Disable form during submission
+    submitBtn.disabled = true;
+    showStatus('Submitting form...', 'loading');
 
-    // Show success message
-    showStatus('Redirecting to call page...', 'success');
+    // Send POST request to webhook
+    const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://primary-production-23ae.up.railway.app/webhook/form-submission';
 
-    // Redirect to call page after a short delay
-    setTimeout(() => {
-        window.location.href = 'call.html';
-    }, 500);
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const result = await response.json();
+        console.log('Form submission successful:', result);
+
+        // Store data in localStorage for the call page
+        localStorage.setItem('vapiCallData', JSON.stringify(formData));
+
+        // Show success message
+        showStatus('Form submitted successfully! Redirecting...', 'success');
+
+        // Redirect to call page after a short delay
+        setTimeout(() => {
+            window.location.href = 'call.html';
+        }, 1000);
+
+    } catch (error) {
+        console.error('Form submission error:', error);
+        showStatus(`Submission failed: ${error.message}. Please try again.`, 'error');
+        submitBtn.disabled = false;
+    }
 }
 
 // Add real-time validation on blur
