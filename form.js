@@ -71,20 +71,26 @@ const statusDiv = document.getElementById('status');
 const submitBtn = document.getElementById('submitBtn');
 
 // Input elements
+const callIdInput = document.getElementById('callId');
 const nameInput = document.getElementById('name');
-const phoneInput = document.getElementById('phone');
 const emailInput = document.getElementById('email');
 const countrySelect = document.getElementById('country');
 const businessTypeInput = document.getElementById('business_type');
 const websitesInput = document.getElementById('websites');
 
 // Error message elements
+const callIdError = document.getElementById('callIdError');
 const nameError = document.getElementById('nameError');
-const phoneError = document.getElementById('phoneError');
 const emailError = document.getElementById('emailError');
 const countryError = document.getElementById('countryError');
 const businessTypeError = document.getElementById('businessTypeError');
 const websitesError = document.getElementById('websitesError');
+
+// Function to get country name from code
+function getCountryName(code) {
+    const country = countries.find(c => c.code === code);
+    return country ? country.name : code;
+}
 
 // Populate country dropdown
 function populateCountries() {
@@ -96,7 +102,42 @@ function populateCountries() {
     });
 }
 
+// Function to parse query parameters from URL
+function getQueryParams() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        callId: params.get('callId') || params.get('call_id'),
+        name: params.get('name'),
+        email: params.get('email'),
+        businessType: params.get('businessType') || params.get('business_type'),
+        country: params.get('country'),
+        websites: params.get('websites')
+    };
+}
+
+// Function to auto-fill form from query parameters
+function autoFillForm() {
+    const queryParams = getQueryParams();
+
+    if (queryParams.callId) callIdInput.value = queryParams.callId;
+    if (queryParams.name) nameInput.value = queryParams.name;
+    if (queryParams.email) emailInput.value = queryParams.email;
+    if (queryParams.businessType) businessTypeInput.value = queryParams.businessType;
+    if (queryParams.country) countrySelect.value = queryParams.country;
+    if (queryParams.websites) websitesInput.value = queryParams.websites;
+}
+
 // Validation functions
+function validateCallId(callId) {
+    if (!callId || callId.trim().length === 0) {
+        return { valid: false, message: 'Call ID is required' };
+    }
+    if (callId.trim().length < 3) {
+        return { valid: false, message: 'Call ID must be at least 3 characters' };
+    }
+    return { valid: true, message: '' };
+}
+
 function validateName(name) {
     if (!name || name.trim().length === 0) {
         return { valid: false, message: 'Name is required' };
@@ -104,26 +145,6 @@ function validateName(name) {
     if (name.trim().length < 2) {
         return { valid: false, message: 'Name must be at least 2 characters' };
     }
-    return { valid: true, message: '' };
-}
-
-function validatePhone(phone) {
-    if (!phone || phone.trim().length === 0) {
-        return { valid: false, message: 'Phone number is required' };
-    }
-
-    // Remove all non-digit characters for validation
-    const digitsOnly = phone.replace(/\D/g, '');
-
-    // Check if it has at least 10 digits (international format may vary)
-    if (digitsOnly.length < 10) {
-        return { valid: false, message: 'Phone number must be at least 10 digits' };
-    }
-
-    if (digitsOnly.length > 15) {
-        return { valid: false, message: 'Phone number is too long' };
-    }
-
     return { valid: true, message: '' };
 }
 
@@ -215,6 +236,15 @@ function hideStatus() {
 function validateForm() {
     let isValid = true;
 
+    // Validate call ID
+    const callIdValidation = validateCallId(callIdInput.value);
+    if (!callIdValidation.valid) {
+        showError(callIdInput, callIdError, callIdValidation.message);
+        isValid = false;
+    } else {
+        clearError(callIdInput, callIdError);
+    }
+
     // Validate name
     const nameValidation = validateName(nameInput.value);
     if (!nameValidation.valid) {
@@ -222,15 +252,6 @@ function validateForm() {
         isValid = false;
     } else {
         clearError(nameInput, nameError);
-    }
-
-    // Validate phone
-    const phoneValidation = validatePhone(phoneInput.value);
-    if (!phoneValidation.valid) {
-        showError(phoneInput, phoneError, phoneValidation.message);
-        isValid = false;
-    } else {
-        clearError(phoneInput, phoneError);
     }
 
     // Validate email
@@ -272,31 +293,6 @@ function validateForm() {
     return isValid;
 }
 
-// Submit form data to webhook
-async function submitForm(formData) {
-    const webhookUrl = 'https://primary-production-23ae.up.railway.app/webhook/form-submission';
-
-    try {
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-        return { success: true, data: result };
-    } catch (error) {
-        console.error('Form submission error:', error);
-        return { success: false, error: error.message };
-    }
-}
-
 // Handle form submission
 async function handleSubmit(e) {
     e.preventDefault();
@@ -311,48 +307,43 @@ async function handleSubmit(e) {
 
     // Prepare form data
     const formData = {
+        callId: callIdInput.value.trim(),
         name: nameInput.value.trim(),
-        phone: phoneInput.value.trim(),
         email: emailInput.value.trim(),
         country: countrySelect.value,
+        countryName: getCountryName(countrySelect.value),
         business_type: businessTypeInput.value.trim(),
         websites: websitesInput.value.trim(),
     };
 
-    // Disable form during submission
-    submitBtn.disabled = true;
-    showStatus('Submitting form...', 'loading');
+    // Store data in localStorage for the call page
+    localStorage.setItem('vapiCallData', JSON.stringify(formData));
 
-    // Submit form
-    const result = await submitForm(formData);
+    // Show success message
+    showStatus('Redirecting to call page...', 'success');
 
-    if (result.success) {
-        showStatus('Form submitted successfully!', 'success');
-        form.reset();
-    } else {
-        showStatus(`Submission failed: ${result.error}`, 'error');
-    }
-
-    // Re-enable form
-    submitBtn.disabled = false;
+    // Redirect to call page after a short delay
+    setTimeout(() => {
+        window.location.href = 'call.html';
+    }, 500);
 }
 
 // Add real-time validation on blur
+callIdInput.addEventListener('blur', () => {
+    const validation = validateCallId(callIdInput.value);
+    if (!validation.valid) {
+        showError(callIdInput, callIdError, validation.message);
+    } else {
+        clearError(callIdInput, callIdError);
+    }
+});
+
 nameInput.addEventListener('blur', () => {
     const validation = validateName(nameInput.value);
     if (!validation.valid) {
         showError(nameInput, nameError, validation.message);
     } else {
         clearError(nameInput, nameError);
-    }
-});
-
-phoneInput.addEventListener('blur', () => {
-    const validation = validatePhone(phoneInput.value);
-    if (!validation.valid) {
-        showError(phoneInput, phoneError, validation.message);
-    } else {
-        clearError(phoneInput, phoneError);
     }
 });
 
@@ -394,4 +385,5 @@ websitesInput.addEventListener('blur', () => {
 
 // Initialize
 populateCountries();
+autoFillForm();
 form.addEventListener('submit', handleSubmit);
