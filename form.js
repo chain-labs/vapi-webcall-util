@@ -326,6 +326,23 @@ async function handleSubmit(e) {
         websites: websitesInput.value.trim(),
     };
 
+    // Generate call page URL with query parameters
+    const callPageParams = new URLSearchParams({
+        name: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        businessType: formData.business_type,
+        country: formData.country,
+        websites: formData.websites
+    });
+
+    // Get the base URL (handles both development and production)
+    const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+    const callPageUrl = `${baseUrl}call.html?${callPageParams.toString()}`;
+
+    // Add the URL to the form data
+    formData.callPageUrl = callPageUrl;
+
     // Disable form during submission
     submitBtn.disabled = true;
     showStatus('Submitting form...', 'loading');
